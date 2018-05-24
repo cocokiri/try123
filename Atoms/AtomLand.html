@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+    <section id="theRealContent">
+
+        <div id="drawing"></div>
+    </section>
+
+</head>
+<body>
+<script src="svg.js"></script>
+<script src="pTable.js"></script>
+
+</body>
+<script>
+    const pTable = PeriodicTable2;
+
+    window.myEvents = [
+        {
+            id: "log_X",
+            name: "Player logged",
+            options: ["A", "B", "C"]
+        }
+    ]
+
+
+    window.emit = function(whatHappened) {
+        window.check(whatHappened);
+    }
+    console.log(this)
+
+    console.log('pTa', pTable)
+    console.log('document  ', document)
+    console.log('document 2 ', document.currentScript.ownerDocument.getElementById("drawing"))
+    this.document =  document.currentScript.ownerDocument;
+    console.log('document 2 ', document.getElementById("drawing"))
+
+
+    window.asyncStart = function() {
+
+        emit("Player loggedB");
+
+        const Chemistry = {
+            bondTypes: {
+                //if it's over 0.4 it's polar (unequal sharing), if it's beyond 1.8 it's ionic bond (stealing the electron)
+                covalent: {
+                    pure: 0.4,
+                    polar: 1.8,
+                },
+                ionic: 1.81,
+            },
+            orbitCapacity: [
+                2,
+                8,
+                18
+            ]
+        }
+
+        const Molecule = {
+            children: [],
+            //symbol_1: this.MoleculeFormular(children.slice()),
+            MoleculeFormular: function (atoms) {
+                const symbols = atoms.map(a => a.symbol)
+                const formula = symbols.reduce((el, composite) => el + "-" + composite, "")
+                return formula;
+            }//parent: [], //biological terms at some point
+        }
+        const BondTypes = {
+            //if it's over 0.4 it's polar (unequal sharing), if it's beyond 1.8 it's ionic bond (stealing the electron)
+            covalent: {
+                pure: 0.4,
+                polar: 1.8,
+            },
+            ionic: 1.81,
+        }
+
+
+        const draw = new SVG('drawing').size(window.innerWidth/2, window.innerHeight/2);
+        const protoAtom = {
+            outerShell: 1,
+            parent: null,
+            bonded: null,
+            charge: 0,
+            capacity: 2,
+            name: "H",
+            linkedTo: [],
+            make(presets) {
+//            console.log(this, "this")
+                return Object.assign(this, presets)
+            },
+            winning() {
+                console.log(this)
+                return (this.outerShell === this.capacity || this.outerShell === 0)
+            },
+            share(B) {
+                console.log("yea")
+                B.outerShell++;
+                this.outerShell++;
+                this.link(B);
+                B.link(this);
+                this.bonded = 'covalent'
+            },
+            link(other) {
+                //as seen in Redux reducers:
+                this.linkedTo = [...this.linkedTo, other] //because .push mutates all the fucking arrays in all Atoms...fck JS
+            },
+            unlink(other) {
+            },
+            ionicBond(B) {
+                B.outerShell++;
+                this.outerShell--;
+                this.bonded = "ionic"
+            },
+            canConnect(B) {
+                return (!B.winning() && !this.winning())
+            },
+
+            pos: {x: 100 + Math.random() + 500, y: 100 + Math.random() * 400}
+        };
+
+
+        function deepCopy(obj) {
+            const copy = {};
+            if (!obj || typeof obj !== 'object') {
+                return obj;
+            }
+            Object.keys(obj).forEach(function (k) {
+                if (obj.hasOwnProperty(k)) {
+                    copy[k] = deepCopy(obj[k])
+                }
+            });
+            return copy;
+        }
+
+        const FactoryMaker = function (obj) {
+            //console.log(JSON.parse(JSON.stringify(obj)))
+            // return JSON.parse(JSON.stringify(obj))};
+            return Object.create({...obj})
+        }
+
+        FactoryMaker(protoAtom).make({outerShell: 2});
+
+        const atoms = [1, 6, 1]
+            .map(el => FactoryMaker(protoAtom).make({
+                outerShell: el,
+                pos: {x: 100 + Math.random() * 500, y: 100 + Math.random() * 400}
+            }));
+
+        const divs = atoms.map(el => drawAtom(el));
+        const elecs = atoms.map(el => drawOuterShell(el));
+
+        function drawAtom(atom) {
+            const {pos} = atom;
+            const svgEl = draw.circle(30).fill('blue').attr({cx: pos.x, cy: pos.y})
+            return svgEl;
+        }
+
+        function drawOuterShell(atom) {
+            const {outerShell, pos} = atom; //add number of shell for radius
+            const radius = 50;
+            const elecs = [];
+            for (let i = 0; i < outerShell; i++) {
+                const random = 2 * Math.PI * Math.random()
+                const e = draw.circle(10).attr({
+                    cx: pos.x + Math.cos(random) * radius,
+                    cy: pos.y + Math.sin(random) * radius
+                })
+                elecs.push(e)
+            }
+            return elecs;
+        }
+
+        const stateText = function (state) {
+            let text = draw.text(function (add) {
+                for (prop in state) {
+                    if (typeof state[prop] !== undefined) { //if not a function..not working
+                        add.tspan(prop + " : " + state[prop]).newLine();
+                    }
+                }
+            })
+            return text
+        }
+
+        elecs[0].map(el => firstAnimation(el))
+
+        function RandomOnCircle(radius = 1) {
+            return {
+                x: Math.cos(random) * radius,
+                y: Math.sin(random) * radius
+            }
+        }
+
+        function firstAnimation(el) {
+            el.animate(1000, '>', 100).attr({fill: "#f03"}).after(function () {
+                return secondAnimation(el)
+            })
+        }
+
+        function secondAnimation(el) {
+            el.animate(1000, '>', 100).attr({fill: "#000"}).after(function () {
+                return firstAnimation(el)
+            })
+        }
+
+
+        stateText();
+        divs[0].mousedown(function () {
+            stateTxt = stateText(atoms[0]).attr({'x': 100, "y": 100})
+        });
+        draw.mouseup(function () {
+            document.getElementById(stateTxt.id()).remove();
+        });
+
+    }
+
+    // console.log('document  ', document.currentScript.ownerDocument);
+
+</script>
+</html>

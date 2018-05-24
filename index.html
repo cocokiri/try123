@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+<script>
+    function handleLoad(e) {
+        console.log('Loaded import: ' + e.target.href);
+    }
+    function handleError(e) {
+        console.log('Error loading import: ' + e.target.href);
+    }
+</script>
+
+<link rel="import" onload="handleLoad(event)" onerror="handleError(event)" href="./polyphonic-pitch-detector/index.html">
+
+<div id="xpWrapper">
+    <div id="importedExperience"></div>
+    <button id="newTask">NEW TASK</button>
+    <button id="saveTasks">SAVE</button>
+    <button id="start">START XP</button>
+</div>
+<style>
+    #xpWrapper {
+        height: 50vh;
+        width: 50vw;
+    }
+    #importedExperience{
+        min-height: 42vh;
+    }
+    #task{
+        font-size: 30;
+    }
+
+</style>
+</body>
+</html>
+
+<script>
+    function handleLoad(e) {
+        console.log('Loaded import: ' + e.target.href, e);
+    }
+    function handleError(e) {
+        console.log('Error loading import: ' + e.target.href);
+    }
+</script>
+<script>
+var link = document.querySelector('link[rel="import"]');
+window.content = link.import;
+
+document.getElementById("importedExperience").innerHTML = link.import.getElementById("theRealContent").innerHTML;
+
+const wrap = document.getElementById("xpWrapper");
+
+const TASKS = [];
+
+function check(happened) {
+    const hap = TASKS.filter(e=> e === happened)[0];
+    if (hap) {
+        //if task is set twice that won't work
+        document.getElementById(hap).style.color = "green";
+    }
+}
+
+
+document.getElementById("newTask").addEventListener("mousedown", function() {
+    const taskDiv = document.createElement("div");
+    const dropDown = document.createElement("select");
+
+    const defaultText = document.createElement("option");
+    defaultText.text = "Choose Event";
+    dropDown.add(defaultText);
+
+    window.myEvents.forEach(e => {
+        const option = document.createElement("option");
+        option.text = e.name;
+        dropDown.add(option);
+
+    })
+    taskDiv.appendChild(dropDown);
+    wrap.appendChild(taskDiv)
+
+    dropDown.addEventListener('change', function () {
+        console.log('val ', this.value,
+        );
+        const eventPossibles = window.myEvents.filter(e => e.name === this.value)[0].options;
+
+        const dropDownNext = document.createElement("select")
+
+        eventPossibles.forEach(o => {
+            const opt = document.createElement('option');
+            opt.text = o;
+            dropDownNext.add(opt);
+        })
+        taskDiv.appendChild(dropDownNext)
+        //search for options that can happen with this event
+
+        dropDownNext.addEventListener('change', function () {
+            const task = dropDown.value + dropDownNext.value;
+
+            console.log("TASK ", task)
+            const div = document.createElement("div");
+
+            div.textContent = dropDown.value + " : " + dropDownNext.value;
+            div.id = task;
+            wrap.appendChild(div);
+            TASKS.push(dropDown.value + dropDownNext.value);
+
+        })
+
+        //second level deep
+    })
+})
+document.getElementById("start").addEventListener("mousedown", function(){
+    asyncStart();
+});
+
+console.log(content, link.import.documentElement, link.document,  "AAA");
+
+</script>
+<style>
+
+    #drawing {
+        max-width: 50vw;
+        max-height: 50vh;
+    }
+</style>
+
+
+
